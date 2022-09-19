@@ -1,0 +1,52 @@
+{
+  "usgeocoder": {
+    "request_status": {
+      "request_address": "27500 Riverview Center Blvd, 34134",
+      "request_status_code": {
+        "flags": "",
+        "value": "Success"
+      },
+      "request_status_code_description": {
+        "census": "yes",
+        "usps": "no",
+        "parcel": "unavailable",
+        "value": "Both street address and zip code were found"
+      },
+      "request_status_version": "15.1221"
+    },
+    "geo_info": {
+      "geo_status": "Match Found",
+      "latitude": "26.3409280813189",
+      "longitude": "-81.8081637463711"
+    },
+    "address_info": {
+      "address_status": "Match Found",
+      "street": "27500 RIVERVIEW CENTER BLVD",
+      "city": "Bonita Springs",
+      "county": "Lee",
+      "state": "FL",
+      "zip5": "34134"
+    },
+    "zipcode_carrierroute": {
+      "zip9": {
+        "zip9_status": "Match Found",
+        "zip9_value": "34134-4325"
+      },
+      "carrier_route": {
+        "carrier_route_status": "Match Found",
+        "carrier_route_value": "R021"
+      }
+    },
+    "jurisdictions_info": {
+      "county": {
+        "county_status": "Match Found",
+        "county_name": "Lee"
+      },
+      "municipal": {
+        "municipal_status": "Match Found",
+        "municipal_name": "Bonita Springs",
+        "municipal_type": "Bonita Springs city"
+      }
+    }
+  }
+}

@@ -1,0 +1,26 @@
+https:
+  port: "8082"
+
+api:
+  auto-discovery-id: "18154440"
+  name: "weather-info-papi"
+  version: "v1"
+  path: "/api/pro/v1/*"
+  
+geo-info:
+  host: "geo-info-sapi.us-e2.cloudhub.io"
+  path: 
+    base: "/api/sys/v1"
+    by:
+      id: "/geoLocInfoByIp"
+      zip: "/geoLocInfoByZip" 
+  client-id:  "![Z1o+vi4mL/6QO/McU1UQ+8cs23D4foBXDipKafQWcSV1zrafjAxmCw==]"
+  client-secret: "![QHM0FQzDGQq89RfwIqzXCf2QA0cD/8UmeSKecLg1DqyntAErHkRQCg==]"          
+
+weather-info:
+  host: "weather-info-sapi.us-e2.cloudhub.io"
+  path:
+    base: "/api/sys/v1"
+    weather: "/weatherInfo"    
+  client-id:  "![Z1o+vi4mL/6QO/McU1UQ+8cs23D4foBXDipKafQWcSV1zrafjAxmCw==]"
+  client-secret: "![QHM0FQzDGQq89RfwIqzXCf2QA0cD/8UmeSKecLg1DqyntAErHkRQCg==]"

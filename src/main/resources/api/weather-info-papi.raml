@@ -1,0 +1,79 @@
+#%RAML 1.0
+title: weather-info-papi
+
+description: This API accepts the Lat Long as  as input calls external endpoint to get the weather information
+
+traits:
+  client-id-enforcement: !include /exchange_modules/a5688458-7f17-4b5b-be4e-cd36aaa6f904/client-id-enforcement/1.0.1/client-id-enforcement.raml
+  correlation-id: !include /exchange_modules/a5688458-7f17-4b5b-be4e-cd36aaa6f904/correlation-id/1.0.0/correlation-id.raml
+
+
+protocols:
+  - HTTP
+  - HTTPS
+uses:
+  myLib: library/resource-library.raml
+
+/weatherInfo:
+ get:
+  displayName: Weather Info 
+  description: Get Weather Info from lat Long
+  is:
+    - client-id-enforcement
+    - correlation-id    
+  queryParameters:
+    forecast:
+      type: string
+      example: current
+      required: false
+    ipAddress:
+      displayName: IP Address
+      type:  string
+      required: false
+      example: "207.210.222.68"
+    addressLine1: 
+      displayName: Address Line 1
+      type: string
+      required: false
+      example: "27500 Riverview Center Blvd"  
+    addressLine2:
+      displayName: Address Line 2
+      type: string
+      required: false
+      example: ""      
+    city:
+      displayName: City Name
+      type: string
+      required: false
+      example: "Bonita Springs"      
+    state:
+      displayName: State Code
+      description: Please Enter 2 Digit State Code  
+      type: string
+      required: false
+      maxLength: 2
+      example: "FL"      
+    zipCode:
+      displayName: Zip Code
+      type: string
+      required: false
+      maxLength: 5
+      example: "34134"           
+  responses:
+   200:
+    body:
+     application/json:
+       type: myLib.WeatherInfoResponseType
+       example: !include examples/response/weather-info-response.json       
+   400:
+    body:
+     application/json:
+      example:
+   401:
+    body:
+     application/json:
+      example:
+   500:
+    body:
+     application/json:
+      example:

@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:request-config name="HTTP_Geo_Loc_Request_configuration" doc:name="HTTP Request configuration" doc:id="54ff6d8e-f1fd-4a91-9143-de2df700f11f" basePath="${secure::geo-info.path.base}">
+		<http:request-connection protocol="HTTPS" host="${secure::geo-info.host}"/>
+	</http:request-config>
+	<http:request-config name="HTTP_Weather_Info_Request_configuration" doc:name="HTTP Request configuration" doc:id="915cd1a9-a6a1-453d-bee7-0396c0c17010" basePath="${secure::weather-info.path.base}">
+		<http:request-connection protocol="HTTPS" host="${secure::weather-info.host}"/>
+	</http:request-config>
+	<flow name="weather-info-papi-implFlow" doc:id="b4295ef4-e903-4ba5-b7ce-88ca2810531f" >
+		<ee:transform doc:name="Transform Message" doc:id="f2e8aedc-f2da-49d9-b84a-1fad9fd49131" >
+			<ee:variables >
+				<ee:set-variable variableName="forecast" ><![CDATA[%dw 2.0
+output application/java
+---
+attributes.queryParams.forecast default ""]]></ee:set-variable>
+				<ee:set-variable variableName="address" ><![CDATA[%dw 2.0
+output application/java
+---
+(attributes.queryParams.addressLine1 default "") ++ " " ++ 
+(attributes.queryParams.addressLine2 default "") ++ " " ++ 
+(attributes.queryParams.city default "") ]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<choice doc:name="Is Zip Or Address Exist?" doc:id="26135b78-68b0-44c1-a7dd-bdb76c385d8b" >
+			<when expression="#[!isEmpty(attributes.queryParams.address) or !isEmpty(attributes.queryParams.zipCode)]">
+				<http:request method="GET" doc:name="Geo Loc Call By Zip or Address" doc:id="dd5cf66e-acc8-44c8-8ab9-639621a7d221" config-ref="HTTP_Geo_Loc_Request_configuration" path="${secure::geo-info.path.by.zip}" sendCorrelationId="NEVER">
+					<http:headers ><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+	"correlationId": vars.correlationId,
+	"client_id": Mule::p('secure::geo-info.client-id'),
+	"client_secret": Mule::p('secure::geo-info.client-secret')
+}]]]></http:headers>
+					<http:query-params ><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+	("address": vars.address default "") if(!isEmpty(vars.address default "")),
+	("zipCode": attributes.queryParams.zipCode default "") if(!isEmpty(attributes.queryParams.zipCode default ""))
+}]]]></http:query-params>
+				</http:request>
+				<ee:transform doc:name="Transform Message" doc:id="e33651de-63d0-499d-a556-684249c5bffc" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[
+%dw 2.0
+output application/json
+---
+if ( payload.usgeocoder.geo_info.geo_status == "No Match" ) {
+	"message": payload.usgeocoder.request_status.request_status_code_description.value,
+	"status": "error"
+}
+else
+  {
+	"status": "success",
+	"latitude": payload.usgeocoder.geo_info.latitude,
+	"longitude": payload.usgeocoder.geo_info.longitude
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<http:request method="GET" doc:name="Geo Loc Call By Ip Address" doc:id="837c41d0-8d9a-4938-aa32-de7e78bdcb30" path="${secure::geo-info.path.by.id}" config-ref="HTTP_Geo_Loc_Request_configuration">
+					<http:headers ><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+	"correlationId": vars.correlationId,
+	"client_id": Mule::p('secure::geo-info.client-id'),
+	"client_secret": Mule::p('secure::geo-info.client-secret')
+}]]]></http:headers>
+					<http:query-params ><![CDATA[#[{
+	"ipAddress": attributes.queryParams.ipAddress default "0.0.0.0"
+}]]]></http:query-params>
+				</http:request>
+				<ee:transform doc:name="Transform Message" doc:id="df4eb541-af18-4667-96e4-dd9942d6375f" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+if(payload.success == false) 
+{
+	"message":payload.error.info,
+	"status": "error"
+}
+else {
+  "status": "success",
+  "latitude": payload.latitude,
+  "longitude": payload.longitude
+}
+]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		<choice doc:name="Is Geo Coder Successful?" doc:id="119af212-af5f-4d75-b03b-c041b44b4125" >
+			<when expression='#[payload.status == "success"]'>
+				<http:request method="GET" doc:name="Request" doc:id="fb360ebd-ed38-4d6a-bce0-f3443c279daf" config-ref="HTTP_Weather_Info_Request_configuration" path="${secure::weather-info.path.weather}">
+			<http:headers><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+	"correlationId": vars.correlationId,
+	"client_id": Mule::p('secure::weather-info.client-id'),
+	"client_secret": Mule::p('secure::weather-info.client-secret')
+}]]]></http:headers>
+			<http:query-params><![CDATA[#[%dw 2.0
+output application/json
+---
+{
+	"lat":payload.latitude,
+	"long":payload.longitude,
+	"forecast":vars.forecast
+}]]]></http:query-params>
+		</http:request>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="Logger" doc:id="a6e0f1f1-c4bb-4d16-aebd-dd4af9a025e2" />
+			</otherwise>
+		</choice>
+	</flow>
+</mule>
